@@ -4,16 +4,13 @@ on:
   push:
     tags:
       - "v*"
-  # Run once, by hand, after qsp-client 0.3.0 is published everywhere: the
-  # final qsp-mcp release (no code, installs qsp-client) and the old Registry
-  # entry marked deprecated. It runs from this workflow because qsp-mcp's PyPI
-  # trusted publisher names publish.yml.
+  # Run once, by hand: mark the old qsp-mcp Registry entry deprecated.
   workflow_dispatch:
     inputs:
       job:
         description: "What to run"
         type: choice
-        options: [qsp-mcp-rename-shim]
+        options: [deprecate-qsp-mcp]
 
 jobs:
   security:
@@ -201,40 +198,12 @@ jobs:
           exit 1
 
   # ---------------------------------------------------------------------------
-  # The qsp-mcp rename shim (manual run only)
+  # Manual run only: mark the old io.github.qso-graph/qsp-mcp Registry entry
+  # deprecated, pointing to qsp-client.
   # ---------------------------------------------------------------------------
-  shim:
-    name: Publish qsp-mcp 0.3.0 (installs qsp-client)
-    if: github.event_name == 'workflow_dispatch' && inputs.job == 'qsp-mcp-rename-shim'
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: qsp-client must already be on PyPI
-        run: |
-          WANT="$(grep -m1 '"qsp-client>=' shim/pyproject.toml | sed -E 's/.*>=([0-9.]+).*/\1/')"
-          HAVE="$(curl -fsS https://pypi.org/pypi/qsp-client/json | jq -r '.info.version')"
-          echo "shim needs qsp-client>=${WANT}; PyPI has ${HAVE}"
-          python3 -c "import sys; v=lambda s: tuple(map(int, s.split('.'))); sys.exit(0 if v('${HAVE}') >= v('${WANT}') else 1)"
-
-      - name: Build the shim
-        run: |
-          pip install build
-          python -m build shim --outdir dist
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-
   deprecate:
     name: Deprecate the old Registry entry
-    needs: shim
+    if: github.event_name == 'workflow_dispatch' && inputs.job == 'deprecate-qsp-mcp'
     runs-on: ubuntu-latest
     permissions:
       id-token: write

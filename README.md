@@ -126,7 +126,7 @@ Works with any OpenAI-compatible endpoint: [llama.cpp](https://github.com/ggml-o
 
 qsp-client is qsp-mcp, renamed: in the MCP world, `-mcp` names mark servers, and this is a client.
 
-- `pip install -U qsp-mcp` now installs qsp-client, so upgrading needs nothing else.
+- Install the new name: `pip uninstall qsp-mcp && pip install qsp-client`.
 - Your config keeps working: `~/.config/qsp-mcp/config.json` and `~/.qsp-mcp.json` are still read, after the new
   `~/.config/qsp-client/config.json` and `~/.qsp-client.json`.
 - The `qsp-mcp` command still works, and says it has moved. Use `qsp-client`.
