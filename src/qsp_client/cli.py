@@ -1,4 +1,4 @@
-"""CLI entry point for qsp-mcp.
+"""CLI entry point for qsp-client.
 
 Supports two modes:
 - Interactive: readline-enabled chat loop
@@ -17,6 +17,9 @@ from .config import load_config
 from .relay import QSPRelay
 
 DEFAULT_CONFIG_PATHS = [
+    Path.home() / ".config" / "qsp-client" / "config.json",
+    Path.home() / ".qsp-client.json",
+    # From when this was qsp-mcp; still read so existing setups keep working.
     Path.home() / ".config" / "qsp-mcp" / "config.json",
     Path.home() / ".qsp-mcp.json",
 ]
@@ -32,17 +35,17 @@ def _find_config() -> Path | None:
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="qsp-mcp",
+        prog="qsp-client",
         description="QSP — relay MCP tools to any OpenAI-compatible LLM endpoint",
     )
     parser.add_argument(
-        "--version", action="version", version=f"qsp-mcp {__version__}"
+        "--version", action="version", version=f"qsp-client {__version__}"
     )
     parser.add_argument(
         "--config", "-c",
         type=str,
         default=None,
-        help="Path to config file (default: ~/.config/qsp-mcp/config.json)",
+        help="Path to config file (default: ~/.config/qsp-client/config.json)",
     )
     parser.add_argument(
         "--endpoint", "-e",
@@ -102,8 +105,8 @@ async def _run(args: argparse.Namespace) -> int:
     if config_path is None and args.endpoint is None:
         print(
             "Error: No config file found and no --endpoint specified.\n"
-            "Create ~/.config/qsp-mcp/config.json or use --endpoint.\n"
-            "See: https://github.com/qso-graph/qsp-mcp",
+            "Create ~/.config/qsp-client/config.json or use --endpoint.\n"
+            "See: https://github.com/qso-graph/qsp-client",
             file=sys.stderr,
         )
         return 1
@@ -164,7 +167,7 @@ async def _interactive_loop(relay: QSPRelay, max_history: int) -> int:
     history: list[dict[str, str]] = []
 
     print(
-        f"qsp-mcp {__version__} — type your question, or 'quit' to exit.\n"
+        f"qsp-client {__version__} — type your question, or 'quit' to exit.\n"
         f"Servers:\n{relay.get_tool_summary()}\n"
     )
 
@@ -220,13 +223,20 @@ async def _interactive_loop(relay: QSPRelay, max_history: int) -> int:
 
 
 def main() -> None:
-    """Entry point for the qsp-mcp CLI."""
+    """Entry point for the qsp-client CLI."""
     try:
         exit_code = asyncio.run(_run(_parse_args()))
     except KeyboardInterrupt:
         print("\n73!")
         exit_code = 0
     sys.exit(exit_code)
+
+
+def main_renamed() -> None:
+    """The old `qsp-mcp` command: still works, and says where it went."""
+    print("Note: qsp-mcp is now qsp-client; the qsp-mcp command will be removed in a later release.",
+          file=sys.stderr)
+    main()
 
 
 if __name__ == "__main__":
