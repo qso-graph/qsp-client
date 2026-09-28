@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config is read from `~/.config/qsp-client/config.json` or `~/.qsp-client.json`, then from the old
   `~/.config/qsp-mcp/config.json` or `~/.qsp-mcp.json`, so existing setups keep working.
 - The `qsp-mcp` command still works, and says it has moved.
-- A final `qsp-mcp` 0.3.0 on PyPI has no code and installs qsp-client, so `pip install -U qsp-mcp`
-  moves users over. The old Registry entry is marked deprecated, pointing to the new one.
+- The old `qsp-mcp` Registry entry is marked deprecated, pointing to the new one. qsp-mcp on PyPI
+  stays at 0.2.2.
 
 ### Added (CI hygiene)
 
