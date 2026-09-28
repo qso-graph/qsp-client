@@ -1,6 +1,6 @@
 # The final release of the old name. It has no code: installing or upgrading
 # qsp-mcp installs qsp-client, which also provides the old `qsp-mcp` command.
-# Published once, by .github/workflows/publish-shim.yml.
+# Published once, by a manual run of .github/workflows/publish.yml.
 [project]
 name = "qsp-mcp"
 version = "0.3.0"
