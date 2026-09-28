@@ -225,6 +225,7 @@ jobs:
 
       - name: Deprecate io.github.qso-graph/qsp-mcp
         run: |
-          ./mcp-publisher status --status deprecated --all-versions \
+          # status asks "Continue? [y/N]"; answer it, there's no terminal in CI.
+          echo y | ./mcp-publisher status --status deprecated --all-versions \
             --message "Renamed to io.github.qso-graph/qsp-client (pip install qsp-client)" \
             io.github.qso-graph/qsp-mcp
