@@ -1,6 +1,6 @@
 """QSP Relay — the stateless pipe between LLM and MCP tools.
 
-This is the core of qsp-mcp. It manages:
+This is the core of qsp-client. It manages:
 - MCP server lifecycle (start/stop via stdio)
 - Tool discovery and schema translation
 - Conversation loop with tool call/result cycling

@@ -1,7 +1,7 @@
-"""Configuration loader for qsp-mcp.
+"""Configuration loader for qsp-client.
 
 Config format is Claude Desktop compatible — users can copy their existing
-mcpServers block directly. The 'bridge' section is qsp-mcp specific.
+mcpServers block directly. The 'bridge' section is qsp-client specific.
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ class BridgeConfig:
 
 @dataclass
 class Config:
-    """Top-level qsp-mcp configuration."""
+    """Top-level qsp-client configuration."""
 
     servers: dict[str, ServerConfig] = field(default_factory=dict)
     bridge: BridgeConfig = field(default_factory=BridgeConfig)

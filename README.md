@@ -1,27 +1,32 @@
-<!-- mcp-name: io.github.qso-graph/qsp-mcp -->
-# qsp-mcp
+<!-- mcp-name: io.github.qso-graph/qsp-client -->
+# qsp-client
+
+[![PyPI](https://img.shields.io/pypi/v/qsp-client?label=PyPI&color=blue)](https://pypi.org/project/qsp-client/)
+[![MCP Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.modelcontextprotocol.io%2Fv0%2Fservers%3Fsearch%3Dqsp-client&query=%24.servers%5B0%5D.server.version&label=MCP%20Registry&color=blue)](https://registry.modelcontextprotocol.io/v0/servers?search=qsp-client)
 
 **QSP** — relay MCP tools to any OpenAI-compatible local LLM endpoint.
 
-Named after the Q-signal **QSP** ("Will you relay?"), qsp-mcp relays tool calls between a local LLM and [MCP](https://modelcontextprotocol.io/) servers. Any model with function calling capability gains access to the full [qso-graph](https://qso-graph.io) tool ecosystem — 80 tools across 14 packages — from local weights, not from cloud.
+Named after the Q-signal **QSP** ("Will you relay?"), qsp-client relays tool calls between a local LLM and [MCP](https://modelcontextprotocol.io/) servers. It is an MCP **client**: any model with function calling gains access to the [qso-graph](https://qso-graph.io) servers' tools, from local weights, not from cloud.
+
+**Formerly `qsp-mcp`.** See [Moving from qsp-mcp](#moving-from-qsp-mcp).
 
 ## Install
 
 ```bash
-pip install qsp-mcp
+pip install qsp-client
 ```
 
 ## Quick Start
 
 ```bash
 # Interactive mode
-qsp-mcp --config ~/.config/qsp-mcp/config.json
+qsp-client --config ~/.config/qsp-client/config.json
 
 # Single query
-qsp-mcp --query "What bands are open from DN13 to JN48 right now?"
+qsp-client --query "What bands are open from DN13 to JN48 right now?"
 
 # Direct endpoint (no config file needed if no MCP servers configured)
-qsp-mcp --endpoint http://localhost:8000/v1/chat/completions --api-key sk-xxx
+qsp-client --endpoint http://localhost:8000/v1/chat/completions --api-key sk-xxx
 ```
 
 ## Configuration
@@ -72,15 +77,15 @@ The config format is **Claude Desktop compatible** — copy your existing `mcpSe
 }
 ```
 
-The `mcpServers` block uses the exact same format as Claude Desktop. The `bridge` section is qsp-mcp specific (ignored by Claude Desktop).
+The `mcpServers` block uses the exact same format as Claude Desktop. The `bridge` section is qsp-client specific (ignored by Claude Desktop).
 
 ## CLI Options
 
 ```
-qsp-mcp [OPTIONS]
+qsp-client [OPTIONS]
 
 Options:
-  -c, --config PATH       Config file path (default: ~/.config/qsp-mcp/config.json)
+  -c, --config PATH       Config file path (default: ~/.config/qsp-client/config.json)
   -e, --endpoint URL      LLM endpoint URL (overrides config)
   -k, --api-key KEY       API key for the LLM endpoint
   -m, --model NAME        Model name (overrides config)
@@ -101,21 +106,30 @@ Options:
 
 ## Design
 
-qsp-mcp is a **strict, stateless pipe** between an LLM and MCP tools:
+qsp-client is a **strict, stateless pipe** between an LLM and MCP tools:
 
 - No caching, no shared state, no health polling
 - All state lives in MCP servers
 - All inference optimization lives in the inference server (prefix caching, KV-cache)
-- qsp-mcp just connects the two sides
+- qsp-client just connects the two sides
 
 Works with any OpenAI-compatible endpoint: [llama.cpp](https://github.com/ggml-org/llama.cpp), [Ollama](https://ollama.ai), [vLLM](https://github.com/vllm-project/vllm), [SGLang](https://github.com/sgl-project/sglang).
 
 ## Security
 
 - Write-capable tools disabled by default (`--enable-writes` opt-in)
-- Credentials stay inside MCP servers (OS keyring) — never exposed to qsp-mcp or the LLM
+- Credentials stay inside MCP servers (OS keyring) — never exposed to qsp-client or the LLM
 - No subprocess, no shell execution, no eval
 - All external connections HTTPS only (LAN endpoints exempted)
+
+## Moving from qsp-mcp
+
+qsp-client is qsp-mcp, renamed: in the MCP world, `-mcp` names mark servers, and this is a client.
+
+- `pip install -U qsp-mcp` now installs qsp-client, so upgrading needs nothing else.
+- Your config keeps working: `~/.config/qsp-mcp/config.json` and `~/.qsp-mcp.json` are still read, after the new
+  `~/.config/qsp-client/config.json` and `~/.qsp-client.json`.
+- The `qsp-mcp` command still works, and says it has moved. Use `qsp-client`.
 
 ## License
 
