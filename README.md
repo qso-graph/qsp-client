@@ -13,7 +13,8 @@ Named after the Q-signal **QSP** ("Will you relay?"), qsp-client relays tool cal
 ## Install
 
 ```bash
-pip install qsp-client
+uv tool install qsp-client   # the qsp-client command, on your PATH
+pip install qsp-client       # or into your own environment
 ```
 
 ## Quick Start

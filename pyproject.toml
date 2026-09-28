@@ -41,6 +41,10 @@ qsp-client = "qsp_client.cli:main"
 # The old command name, kept while users move over.
 qsp-mcp = "qsp_client.cli:main_renamed"
 
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
