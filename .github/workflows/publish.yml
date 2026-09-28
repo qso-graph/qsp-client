@@ -4,10 +4,21 @@ on:
   push:
     tags:
       - "v*"
+  # Run once, by hand, after qsp-client 0.3.0 is published everywhere: the
+  # final qsp-mcp release (no code, installs qsp-client) and the old Registry
+  # entry marked deprecated. It runs from this workflow because qsp-mcp's PyPI
+  # trusted publisher names publish.yml.
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "What to run"
+        type: choice
+        options: [qsp-mcp-rename-shim]
 
 jobs:
   security:
     name: Security gates
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -188,3 +199,63 @@ jobs:
           done
           echo "FAIL: release incomplete. PyPI=${PYPI:-none} Registry=${REG:-none}, expected ${TAG_VERSION}"
           exit 1
+
+  # ---------------------------------------------------------------------------
+  # The qsp-mcp rename shim (manual run only)
+  # ---------------------------------------------------------------------------
+  shim:
+    name: Publish qsp-mcp 0.3.0 (installs qsp-client)
+    if: github.event_name == 'workflow_dispatch' && inputs.job == 'qsp-mcp-rename-shim'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: qsp-client must already be on PyPI
+        run: |
+          WANT="$(grep -m1 '"qsp-client>=' shim/pyproject.toml | sed -E 's/.*>=([0-9.]+).*/\1/')"
+          HAVE="$(curl -fsS https://pypi.org/pypi/qsp-client/json | jq -r '.info.version')"
+          echo "shim needs qsp-client>=${WANT}; PyPI has ${HAVE}"
+          python3 -c "import sys; v=lambda s: tuple(map(int, s.split('.'))); sys.exit(0 if v('${HAVE}') >= v('${WANT}') else 1)"
+
+      - name: Build the shim
+        run: |
+          pip install build
+          python -m build shim --outdir dist
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  deprecate:
+    name: Deprecate the old Registry entry
+    needs: shim
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Install mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher --help > /dev/null
+
+      - name: The new entry must already be in the Registry
+        run: |
+          REG="$(curl -fsS 'https://registry.modelcontextprotocol.io/v0/servers?search=io.github.qso-graph/qsp-client&version=latest' | jq -r '[.servers[] | select(.server.name == "io.github.qso-graph/qsp-client")][0].server.version // empty')"
+          echo "io.github.qso-graph/qsp-client in the Registry: ${REG:-none}"
+          [ -n "$REG" ]
+
+      - name: Authenticate to MCP Registry (GitHub OIDC)
+        run: ./mcp-publisher login github-oidc
+
+      - name: Deprecate io.github.qso-graph/qsp-mcp
+        run: |
+          ./mcp-publisher status --status deprecated --all-versions \
+            --message "Renamed to io.github.qso-graph/qsp-client (pip install qsp-client)" \
+            io.github.qso-graph/qsp-mcp
