@@ -28,6 +28,9 @@ from .schema import (
     filter_tools_by_profile,
     filter_write_tools,
     mcp_to_openai_tools,
+    namespaced_name,
+    safe_name,
+    unique_name,
 )
 
 
@@ -266,10 +269,10 @@ class QSPRelay:
 
         for srv, tool in all_mcp_tools:
             bare = tool.name if hasattr(tool, "name") else tool.get("name", "")
-            if name_counts.get(bare, 0) > 1:
-                ns_name = f"{srv}__{bare}"
-            else:
-                ns_name = bare
+            # Every exposed name is valid, shared or not; and two names can clean
+            # to the same text ("a.b", "a_b"), so each is kept unique.
+            ns_name = namespaced_name(srv, bare) if name_counts.get(bare, 0) > 1 else safe_name(bare)
+            ns_name = unique_name(ns_name, self._tool_server_map)
             self._tool_server_map[ns_name] = srv
             self._original_tool_name[ns_name] = bare
             namespaced_tools.append((srv, ns_name, tool))
