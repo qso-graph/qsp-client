@@ -29,10 +29,9 @@ from .schema import (
     filter_write_tools,
     mcp_to_openai_tools,
     namespaced_name,
+    safe_name,
+    unique_name,
 )
-
-
-_NAME_ROOM = 60  # leaves room for a _N suffix within 64
 
 
 class MCPServerHandle:
@@ -270,12 +269,10 @@ class QSPRelay:
 
         for srv, tool in all_mcp_tools:
             bare = tool.name if hasattr(tool, "name") else tool.get("name", "")
-            ns_name = namespaced_name(srv, bare) if name_counts.get(bare, 0) > 1 else bare
-            # Two server names can clean to the same text ("a.b", "a_b"): keep each unique.
-            base, n = ns_name, 2
-            while ns_name in self._tool_server_map:
-                ns_name = f"{base[:_NAME_ROOM]}_{n}"
-                n += 1
+            # Every exposed name is valid, shared or not; and two names can clean
+            # to the same text ("a.b", "a_b"), so each is kept unique.
+            ns_name = namespaced_name(srv, bare) if name_counts.get(bare, 0) > 1 else safe_name(bare)
+            ns_name = unique_name(ns_name, self._tool_server_map)
             self._tool_server_map[ns_name] = srv
             self._original_tool_name[ns_name] = bare
             namespaced_tools.append((srv, ns_name, tool))

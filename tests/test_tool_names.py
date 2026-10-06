@@ -7,7 +7,7 @@ import re
 from types import SimpleNamespace
 
 from qsp_client.relay import QSPRelay
-from qsp_client.schema import namespaced_name
+from qsp_client.schema import namespaced_name, safe_name, unique_name
 
 VALID = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]{0,63}$")
 
@@ -44,6 +44,7 @@ def test_shared_name_is_namespaced_unique_names_are_not():
     assert sorted(names(relay)) == ["solar__get_version_info", "solar_wind", "wspr__get_version_info", "wspr_spots"]
     assert relay._original_tool_name["wspr__get_version_info"] == "get_version_info"
     assert relay._tool_server_map["wspr__get_version_info"] == "wspr"
+    assert all(VALID.match(n) for n in names(relay))
 
 
 def test_every_name_is_unique_and_valid_for_openai_and_gemini():
@@ -64,3 +65,26 @@ def test_namespaced_name_rules():
     assert namespaced_name("9975.wspr", "t") == "_9975_wspr__t"
     long = namespaced_name("s" * 100, "get_version_info")
     assert len(long) == 64 and long.endswith("__get_version_info")
+
+
+def test_unique_tool_names_are_cleaned_too():
+    """A tool name no other server shares still comes from a third party (review of #9)."""
+    relay = discover({"solar": ["get version", "solar.wind", "9wind", "w" * 70]})
+    got = names(relay)
+    assert len(got) == len(set(got)) == 4
+    assert all(VALID.match(n) for n in got), got
+    # and each still calls the server with its original name
+    assert sorted(relay._original_tool_name.values()) == sorted(["get version", "solar.wind", "9wind", "w" * 70])
+
+
+def test_cleaned_names_that_collide_stay_unique():
+    relay = discover({"a": ["get version"], "b": ["get_version"]})
+    got = names(relay)
+    assert len(set(got)) == 2 and all(VALID.match(n) for n in got)
+
+
+def test_safe_name_and_suffix_never_exceed_64():
+    assert safe_name("9wind") == "_9wind" and safe_name("") == "tool"
+    taken = {"x" * 64} | {("x" * 64)[: 64 - len(f"_{n}")] + f"_{n}" for n in range(2, 1001)}
+    out = unique_name("x" * 64, taken)
+    assert out.endswith("_1001") and len(out) == 64

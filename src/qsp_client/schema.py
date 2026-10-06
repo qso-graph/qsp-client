@@ -14,24 +14,40 @@ from typing import Any
 # Function names every target accepts: OpenAI allows [A-Za-z0-9_-]{1,64}; Gemini
 # also wants a letter or underscore first. Server names come from the user's
 # config, so they are made to fit rather than trusted.
-_NAME_MAX = 64
+NAME_MAX = 64
 _UNSAFE = re.compile(r"[^A-Za-z0-9_-]")
 
 
-def namespaced_name(server: str, tool: str) -> str:
-    """``{server}__{tool}``, valid as a function name for OpenAI and Gemini.
+def safe_name(name: str, fallback: str = "tool") -> str:
+    """One function name, valid for OpenAI and Gemini: characters outside
+    ``[A-Za-z0-9_-]`` become ``_``, it starts with a letter or underscore, and it
+    is at most 64 characters. Tool names come from third-party MCP servers, so
+    they are cleaned like server names, never trusted."""
+    out = _UNSAFE.sub("_", name) or fallback
+    if not (out[0].isalpha() or out[0] == "_"):
+        out = "_" + out
+    return out[:NAME_MAX]
 
-    Characters outside ``[A-Za-z0-9_-]`` become ``_``, the name starts with a
-    letter or underscore, and it is cut to 64 characters, keeping the tool part
-    whole so two servers' copies of one tool stay distinguishable.
-    """
-    srv, name = _UNSAFE.sub("_", server) or "server", _UNSAFE.sub("_", tool)
-    if not (srv[0].isalpha() or srv[0] == "_"):
-        srv = "_" + srv
-    room = _NAME_MAX - len(name) - 2
+
+def namespaced_name(server: str, tool: str) -> str:
+    """``{server}__{tool}``, valid as a function name for OpenAI and Gemini, cut
+    to 64 characters keeping the tool part whole, so two servers' copies of one
+    tool stay distinguishable."""
+    srv, name = safe_name(server, "server"), _UNSAFE.sub("_", tool) or "tool"
+    room = NAME_MAX - len(name) - 2
     if room < 1:
-        return (srv[:1] + "__" + name)[:_NAME_MAX]
+        return (srv[:1] + "__" + name)[:NAME_MAX]
     return f"{srv[:room]}__{name}"
+
+
+def unique_name(name: str, taken: set[str] | dict[str, str]) -> str:
+    """``name``, or ``name_2``, ``name_3``… if it is taken; never over 64 characters."""
+    out, n = name, 2
+    while out in taken:
+        suffix = f"_{n}"
+        out = name[: NAME_MAX - len(suffix)] + suffix
+        n += 1
+    return out
 
 
 def mcp_to_openai_tools(
