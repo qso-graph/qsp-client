@@ -32,7 +32,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://qso-graph.io"
-Documentation = "https://qso-graph.io"
+Documentation = "https://qso-graph.io/servers/qsp-client/"
 Repository = "https://github.com/qso-graph/qsp-client"
 Issues = "https://github.com/qso-graph/qsp-client/issues"
 

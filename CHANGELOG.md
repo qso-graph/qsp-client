@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- PyPI: the Documentation link goes to this package's own page, https://qso-graph.io/servers/qsp-client/ (qso-graph/.github#15).
+
 All notable changes to `qsp-client` (formerly `qsp-mcp`) are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
