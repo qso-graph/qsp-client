@@ -7,7 +7,31 @@ LLM endpoint.
 
 from __future__ import annotations
 
+import re
 from typing import Any
+
+
+# Function names every target accepts: OpenAI allows [A-Za-z0-9_-]{1,64}; Gemini
+# also wants a letter or underscore first. Server names come from the user's
+# config, so they are made to fit rather than trusted.
+_NAME_MAX = 64
+_UNSAFE = re.compile(r"[^A-Za-z0-9_-]")
+
+
+def namespaced_name(server: str, tool: str) -> str:
+    """``{server}__{tool}``, valid as a function name for OpenAI and Gemini.
+
+    Characters outside ``[A-Za-z0-9_-]`` become ``_``, the name starts with a
+    letter or underscore, and it is cut to 64 characters, keeping the tool part
+    whole so two servers' copies of one tool stay distinguishable.
+    """
+    srv, name = _UNSAFE.sub("_", server) or "server", _UNSAFE.sub("_", tool)
+    if not (srv[0].isalpha() or srv[0] == "_"):
+        srv = "_" + srv
+    room = _NAME_MAX - len(name) - 2
+    if room < 1:
+        return (srv[:1] + "__" + name)[:_NAME_MAX]
+    return f"{srv[:room]}__{name}"
 
 
 def mcp_to_openai_tools(

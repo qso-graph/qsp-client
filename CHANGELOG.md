@@ -5,6 +5,18 @@ All notable changes to `qsp-client` (formerly `qsp-mcp`) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] — 2026-10-06
+
+### Fixed
+
+- **Tool names are always valid function names** (#8). When servers share a tool name (every
+  qso-graph server has `get_version_info`), the copies are namespaced as `server__tool`, which
+  0.3.0 already did. The server part comes from your config, though, so a name like `my solar` or
+  `9975.wspr` could produce a function name that OpenAI or Gemini rejects. Names are now cleaned
+  to `[A-Za-z0-9_-]`, start with a letter or underscore, fit in 64 characters, and stay unique
+  even when two server names clean to the same text. Tests cover both the namespacing and the
+  rules.
+
 ## [0.3.0] — 2026-09-28
 
 ### Changed
