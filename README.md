@@ -134,7 +134,7 @@ qsp-client is qsp-mcp, renamed: in the MCP world, `-mcp` names mark servers, and
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+GPL-3.0-or-later — see [LICENSE](LICENSE).
 
 ## Part of the qso-graph ecosystem
 
