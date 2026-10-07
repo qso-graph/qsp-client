@@ -3,7 +3,7 @@ name = "qsp-client"
 version = "0.3.2"
 description = "MCP tool relay for local LLM inference — bridge any OpenAI-compatible endpoint to MCP servers"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "GPL-3.0-or-later"}
 authors = [{name = "Greg Beam, KI7MT", email = "ki7mt@yahoo.com"}]
 requires-python = ">=3.10"
 dependencies = [
@@ -21,7 +21,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Communications :: Ham Radio",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
