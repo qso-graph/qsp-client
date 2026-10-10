@@ -5,6 +5,12 @@ All notable changes to `qsp-client` (formerly `qsp-mcp`) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+- **The published contact is `maintainers@qso-graph.io`** (qso-graph-devel#69). The `authors` field
+  carried a personal address, and that field is what PyPI shows on the package page. The project
+  has had outside contributions; a project address is the fitting route for them.
+
 ## [0.3.3] — 2026-10-07
 
 - Licence: GPL-3.0-or-later, as the LICENSE file already said. The package metadata and README said MIT; released versions up to 0.3.2 keep the MIT terms they were published with.
