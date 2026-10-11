@@ -23,7 +23,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 from .client import LLMClient, extract_text, extract_tool_calls, get_finish_reason
-from .config import BridgeConfig, Config, ProfileConfig, ServerConfig, get_api_key
+from .config import Config, ProfileConfig, ServerConfig, get_api_key
 from .schema import (
     filter_tools_by_profile,
     filter_write_tools,
@@ -265,7 +265,7 @@ class QSPRelay:
 
         # Build namespaced tool list
         self._original_tool_name: dict[str, str] = {}  # ns_name → original
-        namespaced_tools: list[tuple[str, Any]] = []
+        namespaced_tools: list[tuple[str, str, Any]] = []
 
         for srv, tool in all_mcp_tools:
             bare = tool.name if hasattr(tool, "name") else tool.get("name", "")

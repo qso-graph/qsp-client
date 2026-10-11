@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 from typing import Any
 
-
 # Function names every target accepts: OpenAI allows [A-Za-z0-9_-]{1,64}; Gemini
 # also wants a letter or underscore first. Server names come from the user's
 # config, so they are made to fit rather than trusted.
