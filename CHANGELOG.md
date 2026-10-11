@@ -5,6 +5,20 @@ All notable changes to `qsp-client` (formerly `qsp-mcp`) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.5] — 2026-10-11
+
+- **ruff and mypy run in CI** (qso-graph-devel#66), as a job the `ci-all-green` gate requires. This
+  repo sat outside that rollout; it is in the MCP ecosystem and answers to the same rules as the
+  servers. Settings follow `adif-mcp`, as everywhere else, and both run once rather than per Python
+  version: they read the source, and neither answer changes with the interpreter.
+- `_discover_tools` builds rows of `(server, namespaced name, tool)`, which is what
+  `mcp_to_openai_tools(namespace=True)` documents and reads, but the list was annotated as holding
+  two-tuples. Nothing produced or consumed that shape; the annotation was simply wrong.
+- `BridgeConfig` was imported into `relay.py` and never used, and two functions promised a `dict`
+  and a `str` while returning whatever the JSON body held.
+- `E501` is deferred rather than adopted (qso-graph-devel#70): what it reports in these repos are
+  widths, not defects.
+
 ## [0.3.4] — 2026-10-11
 
 - **The published contact is `maintainers@qso-graph.io`** (qso-graph-devel#69). The `authors` field

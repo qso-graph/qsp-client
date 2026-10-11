@@ -65,7 +65,8 @@ class LLMClient:
         resp = self._http.post(self._endpoint, json=payload)
         resp.raise_for_status()
 
-        return resp.json()
+        body: dict[str, Any] = resp.json()
+        return body
 
     def close(self) -> None:
         """Close the HTTP client."""
@@ -127,4 +128,5 @@ def get_finish_reason(response: dict[str, Any]) -> str:
     choices = response.get("choices", [])
     if not choices:
         return ""
-    return choices[0].get("finish_reason", "")
+    reason: str = choices[0].get("finish_reason", "")
+    return reason
