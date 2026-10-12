@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resources. `qsp-adif-convert` converts an ADIF (`.adi`) log to JSON or NDJSON (it was
   `adif-mcp convert`); `qsp_client.adif.reader` reads `.adi` text and `qsp_client.adif.models`
   holds the QSO and entity models. They came with their tests. Nothing in the relay uses them.
+- **`qsp-adif-convert` never drops a record silently** (#24). A record it cannot convert used to
+  vanish unless `--errors` was given, and the run still exited 0, so a log with no station
+  callsign converted to `[]` and looked like success. It now always reports how many records
+  failed and why on stderr, says to use `--station-call` when that is the reason, and exits 1.
 
 ## [0.3.5] — 2026-10-11
 

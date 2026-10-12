@@ -68,3 +68,31 @@ def test_build_qso_normalizes_and_maps() -> None:
     # If PROGRAMID was seen, builder stamps _source_program
     sp = q1.adif_fields.get("_source_program")
     assert (sp is None) or sp.endswith("DownloadInBox")
+
+
+def test_the_sample_converts_every_record_with_a_station_call(tmp_path, capsys) -> None:  # type: ignore[no-untyped-def]
+    """#24: every one of the sample's 107 records comes out, counted."""
+    import json
+    from pathlib import Path
+
+    out = tmp_path / "out.json"
+    sample = Path(__file__).parent / "data" / "ki7mt-sample.adi"
+    code = m.main(["-i", str(sample), "-o", str(out), "--station-call", "KI7MT"])
+    assert code == 0
+    records = json.loads(out.read_text())
+    assert len(records) == 107
+    assert {r["station_call"] for r in records} == {"KI7MT"}
+
+
+def test_records_it_cannot_convert_are_reported_never_dropped(tmp_path, capsys) -> None:  # type: ignore[no-untyped-def]
+    """#24: without a station callsign the old run wrote [] and exited 0. Now
+    it exits 1 and says how many records failed, why, and what to give."""
+    from pathlib import Path
+
+    out = tmp_path / "out.json"
+    sample = Path(__file__).parent / "data" / "ki7mt-sample.adi"
+    code = m.main(["-i", str(sample), "-o", str(out)])
+    said = capsys.readouterr().err
+    assert code == 1
+    assert "107 record(s) could not be converted" in said
+    assert "--station-call" in said
