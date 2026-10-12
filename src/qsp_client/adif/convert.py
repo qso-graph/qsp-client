@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from collections import Counter
 from collections.abc import Iterable, Iterator
 from dataclasses import asdict, dataclass, field
@@ -576,6 +577,9 @@ def main(argv: Iterable[str] | None = None) -> int:
 
     # errors handling
     errors_buffer: list[dict[str, str]] = [] if (a.errors and not a.errors_ndjson) else []
+    # Every record that could not be converted, by reason, whether or not
+    # --errors was given: a record is never dropped without saying so (#24).
+    failures: Counter[str] = Counter()
 
     if a.ndjson:
         # stream records to NDJSON
@@ -601,6 +605,7 @@ def main(argv: Iterable[str] | None = None) -> int:
                         by_mode[rec.mode] += 1
                         yield rec
                 except Exception as e:
+                    failures[str(e)] += 1
                     err_obj: dict[str, str] = {
                         "index": str(idx),
                         "error": str(e),
@@ -635,6 +640,7 @@ def main(argv: Iterable[str] | None = None) -> int:
                     by_band[rec.band] += 1
                     by_mode[rec.mode] += 1
             except Exception as e:
+                failures[str(e)] += 1
                 # Make a plain dict[str, str] so it matches write_errors_ndjson
                 # and errors_buffer types
                 err: dict[str, str] = {
@@ -669,9 +675,22 @@ def main(argv: Iterable[str] | None = None) -> int:
             for m, n in by_mode.most_common():
                 print(f"  {m:>6}  {n}")
 
-    # exit code
-    had_errors = a.errors and (errors_buffer or a.errors_ndjson)
-    return 0 if not had_errors else 1
+    # Said every time, on stderr, so the output file stays data: a log with
+    # no station callsign used to convert to [] and exit 0 (#24).
+    if failures:
+        failed = sum(failures.values())
+        print(f"{failed} record(s) could not be converted:", file=sys.stderr)
+        for reason, count in failures.most_common():
+            print(f"  {count} x {reason}", file=sys.stderr)
+        if any("station_call" in reason for reason in failures):
+            print(
+                "  The log names no station callsign (no header tag and no "
+                "STATION_CALLSIGN); give it with --station-call.",
+                file=sys.stderr,
+            )
+
+    # exit code: 1 when any record could not be converted
+    return 1 if failures else 0
 
 
 def add_convert_args(p: argparse.ArgumentParser) -> None:
