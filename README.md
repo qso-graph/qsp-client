@@ -105,6 +105,19 @@ Options:
 | `/help` | Show help |
 | `quit` | Exit (also: `exit`, `q`, `73`) |
 
+## ADIF tools
+
+`qsp-adif-convert` converts an ADIF (`.adi`) log to JSON or NDJSON, with filters for band, mode,
+callsign, date range and confirmed QSOs:
+
+```bash
+qsp-adif-convert -i mylog.adi -o mylog.json
+qsp-adif-convert --help
+```
+
+It works on files on your own machine and opens no connection. It used to be `adif-mcp convert`;
+`adif-mcp` is now only the MCP server.
+
 ## Design
 
 qsp-client is a **strict, stateless pipe** between an LLM and MCP tools:

@@ -1,6 +1,6 @@
 [project]
 name = "qsp-client"
-version = "0.3.5"
+version = "0.4.0"
 description = "MCP tool relay for local LLM inference — bridge any OpenAI-compatible endpoint to MCP servers"
 readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
@@ -9,6 +9,8 @@ requires-python = ">=3.10"
 dependencies = [
     "mcp>=1.0",
     "httpx>=0.27",
+    # The ADIF models (qsp_client.adif.models); mcp already pulls it in.
+    "pydantic>=2",
 ]
 keywords = [
     "amateur-radio", "ham-radio", "mcp", "model-context-protocol",
@@ -40,6 +42,8 @@ Issues = "https://github.com/qso-graph/qsp-client/issues"
 qsp-client = "qsp_client.cli:main"
 # The old command name, kept while users move over.
 qsp-mcp = "qsp_client.cli:main_renamed"
+# ADIF (.adi) to JSON/NDJSON, moved here from adif-mcp.
+qsp-adif-convert = "qsp_client.adif.convert:main"
 
 
 [dependency-groups]

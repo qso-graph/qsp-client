@@ -5,6 +5,17 @@ All notable changes to `qsp-client` (formerly `qsp-mcp`) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-10-12
+
+- **ADIF tools moved here from `adif-mcp`**, which is now only the MCP server and ADIF's published
+  resources. `qsp-adif-convert` converts an ADIF (`.adi`) log to JSON or NDJSON (it was
+  `adif-mcp convert`); `qsp_client.adif.reader` reads `.adi` text and `qsp_client.adif.models`
+  holds the QSO and entity models. They came with their tests. Nothing in the relay uses them.
+- **`qsp-adif-convert` never drops a record silently** (#24). A record it cannot convert used to
+  vanish unless `--errors` was given, and the run still exited 0, so a log with no station
+  callsign converted to `[]` and looked like success. It now always reports how many records
+  failed and why on stderr, says to use `--station-call` when that is the reason, and exits 1.
+
 ## [0.3.5] — 2026-10-11
 
 - **ruff and mypy run in CI** (qso-graph-devel#66), as a job the `ci-all-green` gate requires. This
