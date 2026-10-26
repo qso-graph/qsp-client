@@ -34,7 +34,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # workflow_dispatch offers a branch picker, so unlike the old push trigger this
       # workflow can be started from anywhere. The lock is the pypi Environment's
@@ -115,7 +115,7 @@ jobs:
 
 
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -139,7 +139,22 @@ jobs:
 
       - name: Grep check — no plaintext http://
         run: |
-          if grep -rn 'http://' src/ | grep -v 'localhost\|127\.0\.0\.1\|::1\|10\.\|192\.168\.'; then
+          # localhost, 127.0.0.1 and ::1 only -- the fleet's form, and what
+          # .claude/rules/security.md permits.
+          #
+          # This exempted 10\. and 192\.168\. as well, unanchored, so they matched
+          # anywhere in the line: http://example.com/api/v10.2/thing passed the
+          # gate. Verified with a planted file on 2026-10-26. Neither exemption
+          # was protecting anything -- src/ holds exactly one http:// URL, the
+          # localhost default in config.py -- so they were a hole kept open for a
+          # case that does not exist. Third instance of this shape today, after
+          # adif-mcp's [^l] and qrz-mcp's host exemption.
+          #
+          # A LAN endpoint later is a deliberate decision then, naming the exact
+          # string, not a prefix opened in advance.
+          hits="$(grep -rn 'http://' src/ | grep -v 'localhost\|127\.0\.0\.1\|::1' || true)"
+          if [ -n "$hits" ]; then
+            echo "$hits"
             echo "FAIL: non-HTTPS URL found in source"
             exit 1
           fi
@@ -159,9 +174,9 @@ jobs:
     permissions:
       id-token: write  # Required for trusted publishing (OIDC)
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 

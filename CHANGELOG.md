@@ -25,6 +25,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one per Python branch, now carry the single 3.11+ pin they already resolved to.
   An install on 3.11 or later is unchanged.
 
+### Fixed
+
+- **`ci-all-green` could not fail on the dependency audit.** The `audit` job was
+  added to its `needs` list on 2026-10-26 without the matching result check, and
+  with `if: always()` the `needs` list gates nothing — the check script does. A
+  lockfile advisory would have turned the audit red and left `ci-all-green` green:
+  a gate that cannot fail, in the repository where two advisories had just been
+  found. The result is now checked, as in the other 23.
+- **The `http://` check exempted `10.` and `192.168.` unanchored**, so they matched
+  anywhere in a line and `http://example.com/api/v10.2/thing` passed — verified
+  with a planted file. Neither exemption protected anything: `src/` holds exactly
+  one `http://` URL, the localhost default in `config.py`. The check is now the
+  fleet's form, `localhost`/`127.0.0.1`/`::1` only, and prints the offending line
+  rather than only reporting that one exists. An exemption names the exact thing,
+  never a prefix (`.claude/rules/security.md`).
+- The workflow actions move off Node 20: `actions/checkout@v4` → `@v5`,
+  `actions/setup-python@v5` → `@v6`, `astral-sh/setup-uv@v6` → `@v7`. The other 23
+  repositories moved on 2026-10-26; this one was missed because it sits outside the
+  fleet's repository selector — which is also how its missing Release page and its
+  retired release flow went unnoticed.
+
 ## [0.4.1] — 2026-10-26
 
 ### Security

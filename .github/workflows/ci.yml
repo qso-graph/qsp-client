@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: "3.11"
           enable-cache: true
@@ -53,7 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
@@ -115,6 +115,16 @@ jobs:
           fi
           if [[ "${{ needs.test.result }}" != "success" ]]; then
             echo "FAIL: test matrix did not all succeed (result=${{ needs.test.result }})"
+            exit 1
+          fi
+          # Checked, not merely listed in needs. With `if: always()` the needs
+          # list does not gate anything -- this script does. The audit job was
+          # added to needs on 2026-10-26 without this block, so a lockfile
+          # advisory would have turned the audit red and left ci-all-green
+          # green: a gate that cannot fail, in the repository where two
+          # advisories had just been found.
+          if [[ "${{ needs.audit.result }}" != "success" ]]; then
+            echo "FAIL: the locked dependencies have a known vulnerability (result=${{ needs.audit.result }})"
             exit 1
           fi
           echo "All required CI jobs passed."
