@@ -5,6 +5,37 @@ All notable changes to `qsp-client` (formerly `qsp-mcp`) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] — 2026-10-26
+
+### Security
+
+- `certifi` in `uv.lock` moved from 2026.7.22 to 2026.10.23, clearing a CRITICAL
+  advisory (GHSA-6q48-6c7w-9gw2). Nobody installing from PyPI was exposed:
+  `certifi` arrives transitively through `httpx` with an open range and `uv.lock`
+  is not in the wheel, so a fresh install always resolved a current `certifi`.
+  What was exposed is anything running from this repository with
+  `uv sync --frozen`, which includes this repository's own CI.
+- `opentelemetry-api` moved from 1.45.0 to 1.45.1, clearing CVE-2026-114603.
+  Found by the new audit job below, not by Dependabot, which had not reported it:
+  `pip-audit` reads the lockfile against an advisory database, and that is a
+  different question from the one Dependabot's alert list answers.
+
+### Changed
+
+- **A release is now a deliberate act, not a side effect of merging.**
+  `publish.yml` fires on `workflow_dispatch` with the version typed in, and
+  merging into `main` publishes nothing. This was the last repository still on
+  the `develop` → `main` → publish-on-merge flow that the 22 MCP servers left on
+  2026-10-25; its `develop` was five commits *behind* `main`, so that branch had
+  already stopped being where work landed. `develop` is gone.
+- CI audits the locked dependencies, per pull request and weekly. Its absence is
+  why the `certifi` advisory above sat unnoticed: nothing read `uv.lock` against
+  an advisory database. The weekly run matters because an advisory is published
+  against a lockfile that has not changed, and no push or pull request fires then.
+- The one-off `deprecate-qsp-mcp` job is removed. The MCP Registry already
+  reports `io.github.qso-graph/qsp-mcp` 0.1.1 as `status=deprecated`, so it is
+  spent.
+
 ## [0.4.0] — 2026-10-12
 
 - **ADIF tools moved here from `adif-mcp`**, which is now only the MCP server and ADIF's published

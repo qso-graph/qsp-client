@@ -2,9 +2,14 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main]
   push:
-    branches: [main, develop]
+    branches: [main]
+  # Weekly, because an advisory is published against a lockfile that has not
+  # changed. Nothing in a pull-request-and-push trigger fires when the danger
+  # arrives from outside the repository -- see the audit job below.
+  schedule:
+    - cron: "17 6 * * 1"
 
 # Cancel superseded runs on the same ref (push or PR) so we don't waste
 # minutes when commits land in rapid succession.
@@ -16,19 +21,6 @@ permissions:
   contents: read
 
 jobs:
-  # main takes a release PR from develop, or a security branch, and nothing else:
-  # merging into main publishes. Required on main by its branch protection.
-  release-source:
-    name: Release PR source
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          case "${{ github.head_ref }}" in
-            develop|security/*) echo "ok: ${{ github.head_ref }} -> main" ;;
-            *) echo "main takes a release PR from develop, or a security/ branch"; exit 1 ;;
-          esac
-
   # Lint and types, once rather than per Python: both read the source, and
   # neither answer changes with the interpreter running them (qso-graph-devel#66).
   lint:
@@ -75,9 +67,43 @@ jobs:
       - name: Security tests
         run: uv run pytest tests/test_security.py -v
 
+  audit:
+    name: audit (locked dependencies)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install (locked)
+        run: uv sync --group dev --frozen
+
+      - name: No known vulnerability in the locked dependencies
+        # No --strict, deliberately. --strict fails on any distribution it
+        # could not audit, and `uv sync` installs the project itself -- so the
+        # moment a release bumps the version to one not yet on PyPI, pip-audit
+        # cannot look the project up and --strict turns that into a failure.
+        # It blocked every version bump in all 23 repositories, which is how it
+        # was found: the first real release, dxe-mcp 0.0.3, went red on it with
+        #   "dxe-mcp: Dependency not found on PyPI and could not be audited"
+        # while the lockfile was perfectly clean.
+        #
+        # Without --strict, pip-audit still exits 1 when it FINDS a
+        # vulnerability, which is the whole job. An unauditable local project is
+        # reported as skipped, with its reason, and does not fail the run.
+        #
+        # Verified in both directions against a lock holding certifi 2026.7.22
+        # with the version bumped past PyPI: it reports PYSEC-2026-4320 and
+        # exits 1; with the lock current it reports no vulnerabilities, names the
+        # project as skipped, and exits 0.
+        run: uv run --with pip-audit pip-audit
+
   ci-all-green:
     name: ci-all-green
-    needs: [lint, test]
+    needs: [lint, test, audit]
     runs-on: ubuntu-latest
     if: always()
     steps:
