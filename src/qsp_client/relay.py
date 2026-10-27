@@ -271,7 +271,11 @@ class QSPRelay:
             bare = tool.name if hasattr(tool, "name") else tool.get("name", "")
             # Every exposed name is valid, shared or not; and two names can clean
             # to the same text ("a.b", "a_b"), so each is kept unique.
-            ns_name = namespaced_name(srv, bare) if name_counts.get(bare, 0) > 1 else safe_name(bare)
+            ns_name = (
+                namespaced_name(srv, bare)
+                if name_counts.get(bare, 0) > 1
+                else safe_name(bare)
+            )
             ns_name = unique_name(ns_name, self._tool_server_map)
             self._tool_server_map[ns_name] = srv
             self._original_tool_name[ns_name] = bare

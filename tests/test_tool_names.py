@@ -13,7 +13,9 @@ VALID = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]{0,63}$")
 
 
 def tool(name: str) -> SimpleNamespace:
-    return SimpleNamespace(name=name, description=f"{name} tool", inputSchema={"type": "object"})
+    return SimpleNamespace(
+        name=name, description=f"{name} tool", inputSchema={"type": "object"}
+    )
 
 
 class FakeSession:
@@ -40,8 +42,18 @@ def names(relay: QSPRelay) -> list[str]:
 
 
 def test_shared_name_is_namespaced_unique_names_are_not():
-    relay = discover({"solar": ["get_version_info", "solar_wind"], "wspr": ["get_version_info", "wspr_spots"]})
-    assert sorted(names(relay)) == ["solar__get_version_info", "solar_wind", "wspr__get_version_info", "wspr_spots"]
+    relay = discover(
+        {
+            "solar": ["get_version_info", "solar_wind"],
+            "wspr": ["get_version_info", "wspr_spots"],
+        }
+    )
+    assert sorted(names(relay)) == [
+        "solar__get_version_info",
+        "solar_wind",
+        "wspr__get_version_info",
+        "wspr_spots",
+    ]
     assert relay._original_tool_name["wspr__get_version_info"] == "get_version_info"
     assert relay._tool_server_map["wspr__get_version_info"] == "wspr"
     assert all(VALID.match(n) for n in names(relay))
@@ -74,7 +86,9 @@ def test_unique_tool_names_are_cleaned_too():
     assert len(got) == len(set(got)) == 4
     assert all(VALID.match(n) for n in got), got
     # and each still calls the server with its original name
-    assert sorted(relay._original_tool_name.values()) == sorted(["get version", "solar.wind", "9wind", "w" * 70])
+    assert sorted(relay._original_tool_name.values()) == sorted(
+        ["get version", "solar.wind", "9wind", "w" * 70]
+    )
 
 
 def test_cleaned_names_that_collide_stay_unique():

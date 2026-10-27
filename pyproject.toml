@@ -80,7 +80,7 @@ extend-exclude = [".venv", "dist", "build", ".eggs", ".pytest_cache", "site"]
 # use ADIF's names and not shorter ones of our own. There the length is the
 # correctness.
 select = ["E", "F", "I"]
-ignore = ["E501"]
+ignore = []
 fixable = ["I"]
 
 [tool.mypy]
