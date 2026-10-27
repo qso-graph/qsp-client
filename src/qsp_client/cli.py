@@ -234,8 +234,11 @@ def main() -> None:
 
 def main_renamed() -> None:
     """The old `qsp-mcp` command: still works, and says where it went."""
-    print("Note: qsp-mcp is now qsp-client; the qsp-mcp command will be removed in a later release.",
-          file=sys.stderr)
+    print(
+        "Note: qsp-mcp is now qsp-client; the qsp-mcp command will be removed "
+        "in a later release.",
+        file=sys.stderr,
+    )
     main()
 
 
