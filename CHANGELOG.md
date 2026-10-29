@@ -5,6 +5,23 @@ All notable changes to `qsp-client` (formerly `qsp-mcp`) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **ADIF is read by `qso_graph_lib.adif`**, the fleet's one ADI reader, which reads ADI as
+  ADIF 3.1.7 defines it and passes ADIF's own test files. `qsp-adif-convert` and
+  `qsp_client.adif.reader` had a scanner each, and they lost data:
+  - `reader.py` looked for tags anywhere, values included, so a COMMENT containing
+    `<CALL:5>W9XYZ` **replaced the QSO's callsign**.
+  - Both read files in text mode, which turns CR LF into LF and breaks every multi-line
+    field's declared length; `qsp-adif-convert` also dropped undecodable bytes
+    (`errors="ignore"`), shifting every length after them. Files are now read with their
+    line ends and bytes as written.
+  - A file with no Header no longer has its first record's fields taken as the Header's.
+  The functions and the converter's output are otherwise unchanged. New dependency:
+  `qso-graph-lib>=0.2.0` (standard library only).
+
 ## [0.5.0] — 2026-10-27
 
 ### Changed
