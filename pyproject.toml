@@ -11,6 +11,8 @@ dependencies = [
     "httpx>=0.27",
     # The ADIF models (qsp_client.adif.models); mcp already pulls it in.
     "pydantic>=2",
+    # ADIF reading (qsp-adif-convert), shared with the logbook servers. Standard library only.
+    "qso-graph-lib>=0.2.0",
 ]
 keywords = [
     "amateur-radio", "ham-radio", "mcp", "model-context-protocol",

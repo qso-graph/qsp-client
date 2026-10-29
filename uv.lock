@@ -1,11 +1,11 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.15'",
     "python_full_version == '3.14.*'",
     "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "(python_full_version < '3.14' and sys_platform != 'emscripten') or (python_full_version < '3.12' and sys_platform == 'emscripten')",
+    "python_full_version < '3.12' or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten')",
 ]
 
 [[package]]
@@ -864,6 +864,15 @@ wheels = [
 ]
 
 [[package]]
+name = "qso-graph-lib"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/12/10/028585c4e4b36df9d3f8ca645535ad24087a0abd01494ef226d778a5208b/qso_graph_lib-0.2.0.tar.gz", hash = "sha256:bfb551521ae593b0d161ae8a64afd7ad17b69d4b8f10ed953ce53463854088cd", size = 442846, upload-time = "2026-10-29T15:08:52.182Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/10/ff3ae750da9a93d8a905a6d0d01687fbd3d84c254794aadc0dee034fee13/qso_graph_lib-0.2.0-py3-none-any.whl", hash = "sha256:965505524e7fb416e8261ceeee690beba1a92d0e935c11e5e5cacbe4ecfc9cb8", size = 27805, upload-time = "2026-10-29T15:08:50.962Z" },
+]
+
+[[package]]
 name = "qsp-client"
 version = "0.5.0"
 source = { editable = "." }
@@ -871,6 +880,7 @@ dependencies = [
     { name = "httpx" },
     { name = "mcp" },
     { name = "pydantic" },
+    { name = "qso-graph-lib" },
 ]
 
 [package.dev-dependencies]
@@ -885,6 +895,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.27" },
     { name = "mcp", specifier = ">=1.0" },
     { name = "pydantic", specifier = ">=2" },
+    { name = "qso-graph-lib", specifier = ">=0.2.0" },
 ]
 
 [package.metadata.requires-dev]

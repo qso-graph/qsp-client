@@ -29,6 +29,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TypedDict
 
+from qso_graph_lib import adif
+
 
 class _ErrorRec(TypedDict):
     index: int
@@ -36,60 +38,28 @@ class _ErrorRec(TypedDict):
     fields: dict[str, str]
 
 
-# ---------- ADIF parsing primitives ----------
+# ---------- ADIF parsing: qso_graph_lib.adif, the fleet's one ADI reader ----------
+#
+# This module had its own scanner, and so did reader.py, and lotw-mcp, eqsl-mcp,
+# qrz-mcp and adif-mcp had one each; on 2026-10-29 they disagreed on the same
+# input. qso_graph_lib.adif reads ADI as ADIF 3.1.7 defines it and passes ADIF's
+# own test files.
 
-ADIF_EOR = re.compile(r"<EOR>", re.IGNORECASE)
-ADIF_FIELD = re.compile(
-    r"<(?P<name>[A-Za-z0-9_]+):(?P<len>\d+)(?::(?P<type>[A-Za-z]))?>",
-    re.IGNORECASE,
-)
 
+def _read_input(path: Path) -> str:
+    """The file's text with its line ends as written.
 
-def _coerce_value(raw: str, vtype: str | None) -> str:
-    # Keep as string for safety; schema validation downstream handles types.
-    """_summary_
-
-    Args:
-        raw (str): _description_
-        vtype (str | None): _description_
-
-    Returns:
-        str: _description_
+    read_text() translated CR LF to LF, which breaks every multi-line field's declared
+    length, and errors="ignore" dropped bytes, which shifted every length after them.
     """
-    return raw
+    with path.open(encoding="utf-8", errors="replace", newline="") as f:
+        return f.read()
 
 
 def parse_adif(text: str) -> Iterator[dict[str, str]]:
-    """Yield ADIF records as dicts (keys lowercased)."""
-    m_eoh = re.search(r"<EOH>", text, flags=re.IGNORECASE)
-    body = text[m_eoh.end() :] if m_eoh else text
-
-    idx: int = 0
-    current: dict[str, str] = {}
-
-    while idx < len(body):
-        m_eor = ADIF_EOR.match(body, idx)
-        if m_eor:
-            if current:
-                yield current
-                current = {}
-            idx = m_eor.end()
-            continue
-
-        m = ADIF_FIELD.match(body, idx)
-        if not m:
-            idx += 1
-            continue
-
-        name = m.group("name").lower()
-        length = int(m.group("len"))
-        vtype = m.group("type")
-        val = body[m.end() : m.end() + length]
-        idx = m.end() + length
-        current[name] = _coerce_value(val.strip(), vtype)
-
-    if current:
-        yield current
+    """Yield ADIF records as dicts (keys lowercased, values stripped)."""
+    for rec in adif.iter_records(text):
+        yield {name.lower(): value.strip() for name, value in rec.fields.items()}
 
 
 # ---------- Header parsing (for station call + source program) ----------
@@ -106,23 +76,17 @@ def _extract_header_info(
       station_call_source: "header_tag:<tag>" | "header_text" | None
       source_program: e.g., "eQSL.cc DownloadInBox" if <PROGRAMID:...> present
     """
-    m_eoh = re.search(r"<EOH>", full_text, flags=re.IGNORECASE)
-    header = full_text[: m_eoh.start()] if m_eoh else full_text
+    doc = adif.read(full_text)
+    header = doc.header_text if doc.header_text else full_text
 
-    # 1) ADIF tags in header
-    idx = 0
+    # 1) ADIF tags in header, in the order they are written
     station_tag_val: str | None = None
     station_tag_name: str | None = None
     source_program: str | None = None
 
-    while True:
-        m = ADIF_FIELD.search(header, idx)
-        if not m:
-            break
-        name = m.group("name").lower()
-        length = int(m.group("len"))
-        vtype = m.group("type")
-        val = _coerce_value(header[m.end() : m.end() + length].strip(), vtype)
+    for field_name, raw in doc.header.items():
+        name = field_name.lower()
+        val = raw.strip()
         if (
             name in ("station_callsign", "my_call", "operator", "station_call")
             and val
@@ -132,7 +96,6 @@ def _extract_header_info(
             station_tag_name = name
         if name == "programid" and val:
             source_program = val  # e.g., "eQSL.cc DownloadInBox"
-        idx = m.end() + length
 
     if station_tag_val:
         return station_tag_val, f"header_tag:{station_tag_name}", source_program
@@ -554,7 +517,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     a = p.parse_args(list(argv) if argv is not None else None)
 
     # Read once, set defaults from header (or CLI)
-    full_text = a.input.read_text(encoding="utf-8", errors="ignore")
+    full_text = _read_input(a.input)
     hdr_call, hdr_source, source_program = _extract_header_info(full_text)
 
     global _DEFAULT_STATION_CALL, _DEFAULT_STATION_CALL_SOURCE, _DEFAULT_SOURCE_PROGRAM

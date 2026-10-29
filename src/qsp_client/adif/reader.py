@@ -1,9 +1,9 @@
 """
-Tiny, dependency-free ADIF (.adi) reader.
+ADIF (.adi) reading into QSORecord, on qso_graph_lib.adif.
 
-- Understands the core ADIF tag form: <FIELD[:len][:type]>value
-- Records are separated by <EOR>
-- Field/tag names are treated case-insensitively
+- The ADI itself is read by qso_graph_lib.adif, the fleet's one reader, as ADIF 3.1.7
+  defines it. This module's own scanner looked for tags anywhere in the text, values
+  included, so a COMMENT containing "<CALL:5>W9XYZ" replaced the QSO's callsign.
 - Returns a list[QSORecord] (a TypedDict), with basic normalization:
     * "station_callsign" -> "station_call"
     * keys are lower_snake_case
@@ -13,11 +13,10 @@ Tiny, dependency-free ADIF (.adi) reader.
 
 from __future__ import annotations
 
-import re
-from collections.abc import Iterator
-from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict, cast
+
+from qso_graph_lib import adif
 
 __all__ = ["QSORecord", "parse_adi_file", "parse_adi_text"]
 
@@ -38,20 +37,6 @@ class QSORecord(TypedDict, total=False):
     # Other keys may be present at runtime (TypedDict total=False).
 
 
-_TAG_RE = re.compile(
-    r"""
-    <                             # opening
-    (?P<tag>[A-Za-z0-9_]+)        # tag name
-    (?: : (?P<len>\d+) )?         # optional :length
-    (?: : (?P<typ>[A-Za-z0-9]+) )? # optional :type (unused here)
-    >                             # closing
-    """,
-    re.VERBOSE,
-)
-
-_EOR = "EOR"  # end-of-record marker
-
-
 def _to_snake(name: str) -> str:
     """
     Converts `str `name` to str lower case
@@ -67,51 +52,6 @@ def _normalize_key(k: str) -> str:
     return k
 
 
-@dataclass
-class _Token:
-    """Internal representation of a parsed ADIF field token.
-
-    A token marks a single ADIF field definition found in the raw
-    text stream. It records the tag name, optional declared length,
-    and character offsets for locating the field within the input.
-
-    Attributes:
-        tag: The ADIF field name (e.g., "CALL", "BAND").
-        length: Optional explicit field length if given (e.g., <CALL:5>).
-        start: Index in the input string where this token begins.
-        end: Index just after the closing '>' of the token.
-    """
-
-    tag: str
-    length: int | None
-    start: int
-    end: int  # index just after the '>'
-
-
-def _scan_tokens(s: str) -> Iterator[_Token]:
-    """Scan a raw ADIF string and yield field tokens.
-
-    This function iterates through the input text and locates ADIF
-    field definitions using the compiled tag regex. Each match is
-    converted into an internal `_Token` that captures the tag name,
-    optional field length, and character positions.
-
-    Args:
-        s: Raw ADIF text containing one or more <TAG:len> definitions.
-
-    Yields:
-        _Token objects for each ADIF field found in the input.
-    """
-    for m in _TAG_RE.finditer(s):
-        length = m.group("len")
-        yield _Token(
-            tag=m.group("tag").upper(),
-            length=int(length) if length is not None else None,
-            start=m.start(),
-            end=m.end(),
-        )
-
-
 def parse_adi_text(text: str) -> list[QSORecord]:
     """
     Parse ADIF text into a list of QSORecord dicts.
@@ -125,35 +65,12 @@ def parse_adi_text(text: str) -> list[QSORecord]:
     -------
     list[QSORecord]
     """
-    # Build raw dictionaries first (easier for TypedDict constraints).
     records_raw: list[dict[str, str]] = []
-    cur: dict[str, str] = {}
-
-    tokens = list(_scan_tokens(text))
-    for i, tok in enumerate(tokens):
-        tag = tok.tag
-        next_start = tokens[i + 1].start if i + 1 < len(tokens) else len(text)
-
-        if tok.length is not None:
-            val = text[tok.end : tok.end + tok.length]
-        else:
-            val = text[tok.end : next_start]
-
-        val = val.strip()
-
-        if tag == _EOR:
-            if cur:
-                records_raw.append(cur)
-                cur = {}
-            continue
-
-        key = _normalize_key(tag)
-        if val != "":
-            cur[key] = val
-
-    if cur:
-        records_raw.append(cur)
-
+    for rec in adif.iter_records(text):
+        cur = {_normalize_key(k): v.strip() for k, v in rec.fields.items()}
+        cur = {k: v for k, v in cur.items() if v != ""}
+        if cur:
+            records_raw.append(cur)
     return [record_as_qso(r) for r in records_raw]
 
 
@@ -168,9 +85,10 @@ def parse_adi_file(path: str | Path, encoding: str = "utf-8") -> list[QSORecord]
     encoding:
         Text encoding. ADIF files are commonly UTF-8; change if needed.
     """
-    p = Path(path)
-    data = p.read_text(encoding=encoding, errors="replace")
-    return parse_adi_text(data)
+    # With its line ends as written: text mode turns CR LF into LF and breaks every
+    # multi-line field's declared length.
+    with Path(path).open(encoding=encoding, errors="replace", newline="") as f:
+        return parse_adi_text(f.read())
 
 
 def record_as_qso(d: dict[str, str]) -> QSORecord:
