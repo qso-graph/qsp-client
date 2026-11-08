@@ -4,7 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/qsp-client?label=PyPI&color=blue)](https://pypi.org/project/qsp-client/)
 [![MCP Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.modelcontextprotocol.io%2Fv0%2Fservers%3Fsearch%3Dio.github.qso-graph%2Fqsp-client%26version%3Dlatest&query=%24.servers%5B0%5D.server.version&label=MCP%20Registry&color=blue)](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.qso-graph/qsp-client&version=latest)
 
-**QSP** — relay MCP tools to any OpenAI-compatible local LLM endpoint.
+**QSP**—relay MCP tools to any OpenAI-compatible local LLM endpoint.
 
 Named after the Q-signal **QSP** ("Will you relay?"), qsp-client relays tool calls between a local LLM and [MCP](https://modelcontextprotocol.io/) servers. It is an MCP **client**: any model with function calling gains access to the [qso-graph](https://qso-graph.io) servers' tools, from local weights, not from cloud.
 
@@ -32,7 +32,7 @@ qsp-client --endpoint http://localhost:8000/v1/chat/completions --api-key sk-xxx
 
 ## Configuration
 
-The config format is **Claude Desktop compatible** — copy your existing `mcpServers` block directly:
+The config format is **Claude Desktop compatible**—copy your existing `mcpServers` block directly:
 
 ```json
 {
@@ -132,7 +132,7 @@ Works with any OpenAI-compatible endpoint: [llama.cpp](https://github.com/ggml-o
 ## Security
 
 - Write-capable tools disabled by default (`--enable-writes` opt-in)
-- Credentials stay inside MCP servers (OS keyring) — never exposed to qsp-client or the LLM
+- Credentials stay inside MCP servers (OS keyring)—never exposed to qsp-client or the LLM
 - No subprocess, no shell execution, no eval
 - All external connections HTTPS only (LAN endpoints exempted)
 
@@ -147,8 +147,8 @@ qsp-client is qsp-mcp, renamed: in the MCP world, `-mcp` names mark servers, and
 
 ## License
 
-GPL-3.0-or-later — see [LICENSE](LICENSE).
+GPL-3.0-or-later—see [LICENSE](LICENSE).
 
 ## Part of the qso-graph ecosystem
 
-[qso-graph.io](https://qso-graph.io) — MCP servers for amateur radio.
+[qso-graph.io](https://qso-graph.io)—MCP servers for amateur radio.
