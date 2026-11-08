@@ -14,7 +14,7 @@ Named after the Q-signal **QSP** ("Will you relay?"), qsp-client relays tool cal
 
 ```bash
 uv tool install qsp-client   # the qsp-client command, on your PATH
-pip install qsp-client       # or into your own environment
+uv add qsp-client            # or into your own project
 ```
 
 ## Quick Start
@@ -140,7 +140,7 @@ Works with any OpenAI-compatible endpoint: [llama.cpp](https://github.com/ggml-o
 
 qsp-client is qsp-mcp, renamed: in the MCP world, `-mcp` names mark servers, and this is a client.
 
-- Install the new name: `pip uninstall qsp-mcp && pip install qsp-client`.
+- Install the new name: `uv tool uninstall qsp-mcp && uv tool install qsp-client`.
 - Your config keeps working: `~/.config/qsp-mcp/config.json` and `~/.qsp-mcp.json` are still read, after the new
   `~/.config/qsp-client/config.json` and `~/.qsp-client.json`.
 - The `qsp-mcp` command still works, and says it has moved. Use `qsp-client`.
