@@ -1,7 +1,7 @@
 """
 ADIF (.adi) reading into QSORecord, on qso_graph_lib.adif.
 
-- The ADI itself is read by qso_graph_lib.adif, the fleet's one reader, as ADIF 3.1.7
+- The ADI itself is read by qso_graph_lib.adif, the fleet's one reader, as ADIF 3.1.8
   defines it. This module's own scanner looked for tags anywhere in the text, values
   included, so a COMMENT containing "<CALL:5>W9XYZ" replaced the QSO's callsign.
 - Returns a list[QSORecord] (a TypedDict), with basic normalization:

@@ -42,7 +42,7 @@ class _ErrorRec(TypedDict):
 #
 # This module had its own scanner, and so did reader.py, and lotw-mcp, eqsl-mcp,
 # qrz-mcp and adif-mcp had one each; on 2026-10-29 they disagreed on the same
-# input. qso_graph_lib.adif reads ADI as ADIF 3.1.7 defines it and passes ADIF's
+# input. qso_graph_lib.adif reads ADI as ADIF 3.1.8 defines it and passes ADIF's
 # own test files.
 
 

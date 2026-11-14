@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Docstrings name ADIF 3.1.8 (released 2026-10-12): its fields and ADI rules are 3.1.7's.
 - AGENTS.md and CLAUDE.md: the organization's shared agent guide, and this repository's own.
 
 ## [0.5.2] — 2026-11-08
